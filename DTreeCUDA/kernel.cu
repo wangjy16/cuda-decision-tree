@@ -165,7 +165,7 @@ void mapperScan_2(KColumn* columns, KTransaction* transactions, KNode* nodes, in
     __syncthreads();
 
     // Do reduce in shared memory
-    for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1)
+    for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1)
     {
         if (tid < s)
         {
@@ -180,33 +180,6 @@ void mapperScan_2(KColumn* columns, KTransaction* transactions, KNode* nodes, in
             }
         }
         __syncthreads();
-    }
-    if (tid < 32)
-    {
-        s_valid_counts[tid] += s_valid_counts[tid + 32];
-        s_valid_counts[tid] += s_valid_counts[tid + 16];
-        s_valid_counts[tid] += s_valid_counts[tid + 8 ];
-        s_valid_counts[tid] += s_valid_counts[tid + 4 ];
-        s_valid_counts[tid] += s_valid_counts[tid + 2 ];
-        s_valid_counts[tid] += s_valid_counts[tid + 1 ];
-        for (int i = s_column_start; i < s_column_end; i++)
-        {
-            for (int j = 0; j < MAX_OPTION_COUNT; j++)
-            {
-                s_columns[i].options[j].yes_count += s_columns[i + 32 * column_count].options[j].yes_count;
-                s_columns[i].options[j].no_count  += s_columns[i + 32 * column_count].options[j].no_count;
-                s_columns[i].options[j].yes_count += s_columns[i + 16 * column_count].options[j].yes_count;
-                s_columns[i].options[j].no_count  += s_columns[i + 16 * column_count].options[j].no_count;
-                s_columns[i].options[j].yes_count += s_columns[i + 8  * column_count].options[j].yes_count;
-                s_columns[i].options[j].no_count  += s_columns[i + 8  * column_count].options[j].no_count;
-                s_columns[i].options[j].yes_count += s_columns[i + 4  * column_count].options[j].yes_count;
-                s_columns[i].options[j].no_count  += s_columns[i + 4  * column_count].options[j].no_count;
-                s_columns[i].options[j].yes_count += s_columns[i + 2  * column_count].options[j].yes_count;
-                s_columns[i].options[j].no_count  += s_columns[i + 2  * column_count].options[j].no_count;
-                s_columns[i].options[j].yes_count += s_columns[i + 1  * column_count].options[j].yes_count;
-                s_columns[i].options[j].no_count  += s_columns[i + 1  * column_count].options[j].no_count;
-            }
-        }
     }
 
     // Write result for this block to global memory
