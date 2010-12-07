@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <time.h>
-
+#include <kernel.h>
 #include "model.h"
 
 #include <cutil_inline.h>
@@ -16,6 +16,10 @@ extern "C" int update_gpu(Node* node, Transaction* transactions, int transaction
 extern "C" int update_gpu_2(Node* node, Transaction* transactions, int transaction_count, Column* columns, int column_count, int block_size);
 extern "C" void integer_array_performance_test(int count, int num_threads);
 extern "C" void float_array_performance_test(int count, int num_threads);
+
+extern clock_t kernel_time;
+extern clock_t cpu_reduction_time;
+extern clock_t gpu_ini_time;
 
 using namespace std;
 
@@ -96,26 +100,34 @@ void generate_transaction_table()
 
 void build_single_node()
 {
-    int column_count = 6;
-    int transaction_count = 1000;
+    int column_count = 3;
+    int transaction_count = 1000 * 10;
     Column* columns = t.generateColumn(column_count, 2, 5);
     Transaction* transactions = t.generateTransaction(columns, column_count, transaction_count);
     Node* node = new Node;
     t.iniNode(node);
-    t.scan(node, transactions, transaction_count, columns, column_count, false);
+    t.scan(node, transactions, transaction_count, columns, column_count, 0);
     cout << node->column->id << endl;
     cout << node->gain_ratio << endl;
 }
 
 void build_full_tree_and_dfs_travel()
 {
-    int column_count = 5;
-    int transaction_count = 1000 * 10;
-    Column* columns = t.generateColumn(column_count, 2, 5);
+    clock_t start, gpu_time;
+    int column_count = 3;
+    int transaction_count = 4096 * 256;
+    Column* columns = t.generateColumn(column_count, 2, 2);
     Transaction* transactions = t.generateTransaction(columns, column_count, transaction_count);
     Node* node = new Node;
     t.iniNode(node);
+    // GPU building
+    start = clock();
     t.build(node, transactions, transaction_count, columns, column_count, 2);
+    gpu_time = clock() - start;
+    cout << "Total time: " << (float) gpu_time << " (ms)" << endl;
+    cout << "Kernel time: " << (float) kernel_time << " (ms)" << endl;
+    cout << "gpu ini time: " << (float) gpu_ini_time << " (ms)" << endl;
+    cout << "cpu reduction time: " << (float) cpu_reduction_time << " (ms)" << endl;
     cout << "Parent  \t" << "Option  \t" << "Current \t" << "Gain Info\t" << "Trans Count" << endl;
     t.DFSTravel(node);
 }
@@ -126,14 +138,14 @@ void gpu_cpu_build_compare()
     clock_t cpu_time;
     Node* node;
     int column_count = 4;
-    int transaction_count = 1000 * 500;
+    int transaction_count = 1000 * 50;
     Column* columns = t.generateColumn(column_count, 2, 5);
     Transaction* transactions = t.generateTransaction(columns, column_count, transaction_count);
     // GPU building
     node = new Node;
     t.iniNode(node);
     start = clock();
-    t.build(node, transactions, transaction_count, columns, column_count, 1);
+    t.build(node, transactions, transaction_count, columns, column_count, 2);
     gpu_time = clock() - start;
     cout << "GPU building time: " << (float) gpu_time << " (ms)" << endl;
     // CPU building
@@ -370,15 +382,17 @@ void kernel_type_size_test()
 }
 void update_test()
 {
-    int column_count = 9;
-    int transaction_count = 200000;
-    int num_threads = 128;
+    int column_count = 10;
+    int transaction_count = 41235;
+    int num_threads = 16;
+    int block_size = 32;
     Column* columns = t.generateColumn(column_count, 2, 5);
     Transaction* transactions = t.generateTransaction(columns, column_count, transaction_count);
     Node* node = new Node;
     t.iniNode(node);
-    update_gpu(node, transactions, transaction_count, columns, column_count, num_threads);
-    //update(node, transactions, transaction_count, columns, column_count);
+    cout << update(node, transactions, transaction_count, columns, column_count);
+    //cout << update_gpu(node, transactions, transaction_count, columns, column_count, num_threads);
+    //cout << update_gpu_2(node, transactions, transaction_count, columns, column_count, block_size);
     cout << endl;
 }
 int main(int argc, char** argv)

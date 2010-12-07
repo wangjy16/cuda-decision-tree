@@ -4,11 +4,18 @@
 #include <cutil_inline.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include <iostream>
 
 #include "kernel.cu"
 
 using namespace std;
+
+extern clock_t kernel_time = 0;
+extern clock_t cpu_reduction_time = 0;
+extern clock_t gpu_ini_time = 0;
+
+clock_t start;
 
 void dummyMapperScan(KColumn* columns, KTransaction* transactions, KNode* nodes, int* valid_counts, int transaction_count, int column_count, int node_count, int num_threads);
 
@@ -174,18 +181,20 @@ int update_gpu(Node* node, Transaction* transactions, int transaction_count, Col
 extern "C"
 int update_gpu_2(Node* node, Transaction* transactions, int transaction_count, Column* columns, int column_count, int block_size)
 {
+    start = clock();
     // Compute the size of needed device memory
-    int columns_size = sizeof(KColumn) * column_count * block_size;
+    int num_blocks = (int) ceil(transaction_count / (float) block_size);
+    int columns_size = sizeof(KColumn) * column_count * num_blocks;
     int transactions_size = sizeof(KTransaction) * transaction_count;
-    int valid_counts_size = sizeof(int) * block_size;
+    int valid_counts_size = sizeof(int) * num_blocks;
 
     // Initialize fix data
     if (ini_flag == false)
     {
         // Generate GPU friendly data type
-        getColumn(columns, column_count, block_size);
+        getColumn(columns, column_count, num_blocks);
         getTransaction(transactions, transaction_count, column_count);
-        h_valid_counts = new int[block_size];
+        h_valid_counts = new int[num_blocks];
 
         // Allocate device memory
         cutilSafeCall(cudaMalloc((void**) &d_columns, columns_size));
@@ -211,21 +220,27 @@ int update_gpu_2(Node* node, Transaction* transactions, int transaction_count, C
     // Copy host memory to de device
     cutilSafeCall(cudaMemcpy(d_nodes, h_nodes, nodes_size, cudaMemcpyHostToDevice));
     
+    gpu_ini_time += clock() - start;
+    start = clock();
+
     // Setup execution parameters
-    dim3 grid(1, 1);
+    dim3 grid(num_blocks, 1);
     dim3 threads(block_size, 1);
 
     // Excute the kernel
-    mapperScan_2<<<grid, threads>>> (d_columns, d_transactions, d_nodes, d_valid_counts, transaction_count, column_count, node_count, block_size);
+    mapperScan_2<<<grid, threads>>> (d_columns, d_transactions, d_nodes, d_valid_counts, transaction_count, column_count, node_count);
     //dummyMapperScan(h_columns, h_transactions, h_nodes, h_valid_counts, transaction_count, column_count, node_count, num_threads);
 
     // Copy result from device to host
     cutilSafeCall(cudaMemcpy(h_columns, d_columns, columns_size, cudaMemcpyDeviceToHost));
     cutilSafeCall(cudaMemcpy(h_valid_counts, d_valid_counts, valid_counts_size, cudaMemcpyDeviceToHost));
 
+    kernel_time += clock() - start;
+    start = clock();
+
     // Compute valid_count
     int valid_count = 0;
-    for (int i = 0; i < block_size; i++)
+    for (int i = 0; i < num_blocks; i++)
     {
         valid_count += h_valid_counts[i];
     }
@@ -237,7 +252,7 @@ int update_gpu_2(Node* node, Transaction* transactions, int transaction_count, C
         {
             columns[i].options[j].yes_count = 0;
             columns[i].options[j].no_count = 0;
-            for (int k = 0; k < block_size; k++)
+            for (int k = 0; k < num_blocks; k++)
             {
                 columns[i].options[j].yes_count += h_columns[i + column_count * k].options[j].yes_count;
                 columns[i].options[j].no_count  += h_columns[i + column_count * k].options[j].no_count;
@@ -246,6 +261,8 @@ int update_gpu_2(Node* node, Transaction* transactions, int transaction_count, C
             //cout << columns[i].options[j].no_count  << endl;
         }
     }
+    cpu_reduction_time += clock() - start;
+
     // Cleanup dynamic device data
     cutilSafeCall(cudaFree(d_nodes));
     return valid_count;

@@ -154,7 +154,7 @@ void Tree::scan(Node* node, Transaction* transactions, int transaction_count, Co
     }
     else if (gpu == 2)
     {
-        valid_count = update_gpu_2(node, transactions, transaction_count, columns, column_count, 16);
+        valid_count = update_gpu_2(node, transactions, transaction_count, columns, column_count, 256);
     }
 
  //   int valid_count = 0;
