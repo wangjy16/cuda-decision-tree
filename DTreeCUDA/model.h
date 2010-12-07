@@ -6,11 +6,8 @@
 #define _MODEL_H_
 
 #include "kernel.h"
+#include <time.h>
 #include <vector>
-
-//#define MAX_OPTION_COUNT 10
-//#define MAX_COLUMN_COUNT 20
-//#define MAX_TRANSACTION_COUNT 20000
 
 struct Transaction
 {

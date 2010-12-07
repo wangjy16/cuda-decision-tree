@@ -6,9 +6,10 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
 
-#define MAX_OPTION_COUNT 10
-#define MAX_COLUMN_COUNT 20
-#define MAX_TRANSACTION_COUNT 20000
+#define MAX_OPTION_COUNT 2
+#define MAX_COLUMN_COUNT 3
+#define MAX_BLOCK_SIZE   256
+#define MAX_TRANSACTION_COUNT 1024 * 1024
 
 struct KOption;
 struct KColumn;
@@ -21,6 +22,17 @@ struct KOption
     int column_id;
     int no_count;
     int yes_count;
+};
+
+struct SOption
+{
+    int yes_count;
+    int no_count;
+};
+
+struct SColumn
+{
+    SOption options[MAX_OPTION_COUNT];
 };
 
 struct KColumn
