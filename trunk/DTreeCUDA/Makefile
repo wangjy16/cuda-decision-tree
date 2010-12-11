@@ -6,7 +6,7 @@ CUFILES		:= wrapper.cu
 
 # C/C++ source files (compiled with gcc/c++)
 CCFILESS	:= \
-	main.cpp \
+	program.cpp \
 	model.cpp \
 
 #Rules and targets
