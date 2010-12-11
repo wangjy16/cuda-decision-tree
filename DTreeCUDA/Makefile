@@ -1,12 +1,12 @@
 # Add source files here
-EXECUTABLE := DTreeCUDA
+EXECUTABLE	:= DTreeCUDA
 
 # CUDA source files (compiled with cudacc)
-CUFILES := wrapper.cu
+CUFILES		:= wrapper.cu
 
 # C/C++ source files (compiled with gcc/c++)
-CCFILESS := \
-	program.cpp \
+CCFILESS	:= \
+	main.cpp \
 	model.cpp \
 
 #Rules and targets
