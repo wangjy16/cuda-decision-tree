@@ -5,9 +5,9 @@ EXECUTABLE	:= DTreeCUDA
 CUFILES		:= wrapper.cu
 
 # C/C++ source files (compiled with gcc/c++)
-CXXFILESS	:= \
-	program.cpp \
+CCFILESS	:= \
 	model.cpp \
+	program.cpp \
 
 #Rules and targets
 include ../../common/common.mk
