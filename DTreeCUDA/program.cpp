@@ -379,14 +379,14 @@ void gpu_cpu_build_compare()
     start = clock();
     t.build(gpu_node, transactions, transaction_count, columns, column_count, 2);
     gpu_time = clock() - start;
-    cout << "GPU building time: " << (float) gpu_time << " (ms)" << endl;
+    cout << "GPU building time: " << (float) gpu_time * CLOCK_PER_SEC << " (s)" << endl;
     // CPU building
     cpu_node = new Node;
     t.iniNode(cpu_node);
     start = clock();
     t.build(cpu_node, transactions, transaction_count, columns, column_count, 0);
     cpu_time = clock() - start;
-    cout << "CPU building time: " << (float) cpu_time << " (ms)" << endl;
+    cout << "CPU building time: " << (float) cpu_time * CLOCK_PER_SEC << " (s)" << endl;
     // Compare
     cout << "Speedup: " << (float) cpu_time / (float) gpu_time << endl;
     cout << "Parent  \t" << "Option  \t" << "Current \t" << "Gain Info\t" << "Trans Count" << endl;
