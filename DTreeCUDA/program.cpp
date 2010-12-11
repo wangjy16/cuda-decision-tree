@@ -370,7 +370,7 @@ void gpu_cpu_build_compare()
     clock_t start, gpu_time, cpu_time;
     Node* gpu_node, * cpu_node;
     int column_count = 3;
-    int transaction_count = 1000 * 1000 * 100;
+    int transaction_count = 1000 * 1000 * 500;
     Column* columns = t.generateColumn(column_count, 2, 2);
     Transaction* transactions = t.generateTransaction(columns, column_count, transaction_count);
     // GPU building
