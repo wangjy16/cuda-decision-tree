@@ -5,7 +5,7 @@ EXECUTABLE	:= DTreeCUDA
 CUFILES		:= wrapper.cu
 
 # C/C++ source files (compiled with gcc/c++)
-CCFILESS	:= \
+CXXFILESS	:= \
 	program.cpp \
 	model.cpp \
 
