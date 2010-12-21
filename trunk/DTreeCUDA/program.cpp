@@ -137,7 +137,7 @@ void build_full_tree_from_file_and_dfs_travel()
     t.readTable(path);
     Node* node = new Node;
     t.iniNode(node);
-    t.build(node, t.transactions, t.transactionCount, t.columns, t.columnCount, false);
+    t.build(node, t.transactions, t.transactionCount, t.columns, t.columnCount, 1);
     cout << "Parent  \t" << "Option  \t" << "Current \t" << "Gain Info\t" << "Trans Count" << endl;
     t.DFSTravel(node);
 }
@@ -370,7 +370,7 @@ void gpu_cpu_build_compare()
     clock_t start, gpu_time, cpu_time;
     Node* gpu_node, * cpu_node;
     int column_count = 3;
-    int transaction_count = 1000 * 1000 * 50;
+    int transaction_count = 1000 * 1000 * 5;
     Column* columns = t.generateColumn(column_count, 2, 2);
     Transaction* transactions = t.generateTransaction(columns, column_count, transaction_count);
     // GPU building
@@ -390,7 +390,7 @@ void gpu_cpu_build_compare()
     // Compare
     cout << "Speedup: " << (float) cpu_time / (float) gpu_time << endl;
     cout << "Parent  \t" << "Option  \t" << "Current \t" << "Gain Info\t" << "Trans Count" << endl;
-    t.DFSTravel(gpu_node);
+    t.DFSTravel(cpu_node);
 }
 
 int main(int argc, char** argv)
